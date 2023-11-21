@@ -1,12 +1,12 @@
-package mtc.ncr.apis;
+package core.apis;
 
-import mtc.ncr.apis.dto.MtcNcrExgRequest;
+import core.dto.MtcExgRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 public interface MtcExgApi {
 
-    @PostMapping("/exg")
-    ResponseEntity<?> exchange(@RequestBody MtcNcrExgRequest exgRequest);
+    @PostMapping("/exchange")
+    ResponseEntity<?> exchange(@RequestBody MtcExgRequest exgRequest);
 }
