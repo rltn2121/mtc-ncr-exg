@@ -9,4 +9,12 @@ spring:
       enable-auto-commit: off
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: mtc.ncr.converters.MessageDeserializer
+      value-deserializer: core.converters.GenericDeserializer
+  datasource:
+    url: jdbc:postgresql://15.165.34.151:5432/mtc_db
+    username: team9
+    password: cocteam9(
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database: postgreSQL
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
