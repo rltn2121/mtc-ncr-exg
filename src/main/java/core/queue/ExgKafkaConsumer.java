@@ -42,10 +42,16 @@ public class ExgKafkaConsumer {
 
         log.info ("@@영은 kafka 'mtc.ncr.exgRequest' 잡음! --> {}" , exgReqInfo.toString());
 
-        //원화 금액 정보
+        //요청받은 통화코드로 조회한 금액 정보
         SdaMainMas nowAcInfo = sdaMainMasRepository.
                                         findById(new SdaMainMasId(exgReqInfo.getAcno() , exgReqInfo.getCurC())).orElseThrow();
-        log.info ("@@영은 현재 {} 금액 = {}" ,exgReqInfo.getCurC(), nowAcInfo);
+        //유동성 금액을 조회한다.
+        SdaMainMas krwInfo = sdaMainMasRepository.
+                findById(new SdaMainMasId(exgReqInfo.getAcno() , "KRW")).orElseThrow();
+
+
+        log.info("@@영은 현재 {} 금액 = {}" ,exgReqInfo.getCurC(), nowAcInfo);
+        log.info("@@ 원화 금액 : {}" , krwInfo.getAc_jan());
 
         Double nowJan = nowAcInfo.getAc_jan(); // 현재 환전요청 들어온 통화의 금액
 
@@ -70,10 +76,10 @@ public class ExgKafkaConsumer {
                 resultRequest.setAprvSno(exgReqInfo.getAcser());
             }
 
-            // 해당 계좌번호의 요청받은 통화 금액 < 환전 요청 금액 이면 ERROR
-            if(nowJan < exgReqInfo.getTrxAmt())
+            // 해당 계좌번호의 KRW < 환전 요청 금액 이면 ERROR
+            if(krwInfo.getAc_jan() < exgReqInfo.getTrxAmt())
             {
-                log.info("@@영은 충전 금액 부족 error : 현재 금액 {}, 충전 요청 금액 {}", nowJan, exgReqInfo.getTrxAmt());
+                log.info("@@영은 충전 금액 부족 error : 현재 금액 {}, 충전 요청 금액 {}", krwInfo.getAc_jan(), exgReqInfo.getTrxAmt());
 
                 // 충전 실패
                 resultRequest.setUpmuG(4);

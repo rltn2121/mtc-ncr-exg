@@ -47,7 +47,7 @@ public class MtcExgService {
 
             log.info("@@영은 충전 전 원화(KRW) main_mas --> {} ", KRWMainMas.toString());
 
-            KRWMainMas.setAc_jan(KRWMainMas.getAc_jan() + exgRequest.getTrxAmt());
+            KRWMainMas.setAc_jan(KRWMainMas.getAc_jan() - exgRequest.getTrxAmt());
 
             // main_mas 업데이트
             KRWMainMas = this.sdaMainMasRepository.save(KRWMainMas);
