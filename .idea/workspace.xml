@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ddcc1faa-7e99-4ee1-92d9-1c2ef42e0e6a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/mtc-ncr-exg.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/mtc-ncr-exg.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/core/apis/controller/MtcExgController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/core/apis/controller/MtcExgController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
