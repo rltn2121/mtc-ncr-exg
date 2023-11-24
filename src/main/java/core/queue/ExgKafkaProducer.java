@@ -16,7 +16,7 @@ public class ExgKafkaProducer {
 
     public void produceMessage(MtcExgRequest exgRequest) {
 
-        log.info("@@영은 kafka : exchange produce message : " + exgRequest.toString());
+        log.info("kafka : exchange produce message : " + exgRequest.toString());
 
         // 여기서 충전큐에 넣는 경우는 직접 충전 요청이 들R어온 경우임
         // --> payYn 에 'N' 넣기

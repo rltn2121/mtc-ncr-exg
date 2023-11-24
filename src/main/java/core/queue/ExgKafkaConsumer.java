@@ -40,7 +40,7 @@ public class ExgKafkaConsumer {
 
         MtcResultRequest resultRequest = new MtcResultRequest();
 
-        log.info ("@@영은 kafka 'mtc.ncr.exgRequest' 잡음! --> {}" , exgReqInfo.toString());
+        log.info ("kafka 'mtc.ncr.exgRequest' 잡음! --> {}" , exgReqInfo.toString());
 
         //요청받은 통화코드로 조회한 금액 정보
         SdaMainMas nowAcInfo = sdaMainMasRepository.
@@ -50,8 +50,8 @@ public class ExgKafkaConsumer {
                 findById(new SdaMainMasId(exgReqInfo.getAcno() , "KRW")).orElseThrow();
 
 
-        log.info("@@영은 현재 {} 금액 = {}" ,exgReqInfo.getCurC(), nowAcInfo);
-        log.info("@@ 원화 금액 : {}" , krwInfo.getAc_jan());
+        log.info("현재 {} 금액 = {}" ,exgReqInfo.getCurC(), nowAcInfo);
+        log.info("원화 금액 : {}" , krwInfo.getAc_jan());
 
         Double nowJan = nowAcInfo.getAc_jan(); // 현재 환전요청 들어온 통화의 금액
 
@@ -79,7 +79,7 @@ public class ExgKafkaConsumer {
             // 해당 계좌번호의 KRW < 환전 요청 금액 이면 ERROR
             if(krwInfo.getAc_jan() < exgReqInfo.getTrxAmt())
             {
-                log.info("@@영은 충전 금액 부족 error : 현재 금액 {}, 충전 요청 금액 {}", krwInfo.getAc_jan(), exgReqInfo.getTrxAmt());
+                log.info("충전 금액 부족 error : 현재 금액 {}, 충전 요청 금액 {}", krwInfo.getAc_jan(), exgReqInfo.getTrxAmt());
 
                 // 충전 실패
                 resultRequest.setUpmuG(4);
@@ -92,7 +92,7 @@ public class ExgKafkaConsumer {
             else
             {
                 try {
-                    log.info("@@영은 충전 시도 시작!");
+                    log.info("충전 시도 시작!");
 
                     // 충전 프로세스
                     exgService.exchangeService(exgReqInfo);
@@ -127,7 +127,7 @@ public class ExgKafkaConsumer {
                     kafkaTemplate.send("mtc.ncr.result", "SUCCESS", resultRequest);
                 }
                 catch (Exception e) {
-                    log.info("@@영은 서비스 자체 error");
+                    log.info("서비스 자체 error");
 
                     // 충전 실패
                     resultRequest.setUpmuG(4);
@@ -139,7 +139,7 @@ public class ExgKafkaConsumer {
             }
         }
         catch(Exception e) {
-            log.info("@@영은 서비스 자체 error");
+            log.info("서비스 자체 error");
 
             // 충전 실패
             resultRequest.setUpmuG(4);

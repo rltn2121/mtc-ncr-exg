@@ -32,34 +32,34 @@ public class MtcExgService {
             SdaMainMas TrxMainMas = this.sdaMainMasRepository
                                         .findById(new SdaMainMasId(exgRequest.getAcno(), exgRequest.getCurC())).get();
 
-            log.info("@@영은 충전 전 외화({}) main_mas --> {} ",TrxMainMas.getCur_c(), TrxMainMas.toString());
+            log.info("충전 전 외화({}) main_mas --> {} ",TrxMainMas.getCur_c(), TrxMainMas.toString());
 
             TrxMainMas.setAc_jan(TrxMainMas.getAc_jan() + exgRequest.getTrxAmt());
 
             // main_mas 업데이트
             TrxMainMas = this.sdaMainMasRepository.save(TrxMainMas);
 
-            log.info("@@영은 충전 후 외화({}) main_mas --> {} ",TrxMainMas.getCur_c(), TrxMainMas.toString());
+            log.info("충전 후 외화({}) main_mas --> {} ",TrxMainMas.getCur_c(), TrxMainMas.toString());
 
             /* main_mas KRW 금액 빼주기 */
             SdaMainMas KRWMainMas = this.sdaMainMasRepository
                                         .findById(new SdaMainMasId(exgRequest.getAcno(), "KRW")).get();
 
-            log.info("@@영은 충전 전 원화(KRW) main_mas --> {} ", KRWMainMas.toString());
+            log.info("충전 전 원화(KRW) main_mas --> {} ", KRWMainMas.toString());
 
             KRWMainMas.setAc_jan(KRWMainMas.getAc_jan() - exgRequest.getTrxAmt());
 
             // main_mas 업데이트
             KRWMainMas = this.sdaMainMasRepository.save(KRWMainMas);
 
-            log.info("@@영은 충전 후 원화(KRW) main_mas --> {} ", KRWMainMas.toString());
+            log.info("충전 후 원화(KRW) main_mas --> {} ", KRWMainMas.toString());
 
             // 충전 완료!!!
-            log.info("@@영은 충전 완료!!!");
+            log.info("충전 완료!!!");
         }
         catch( Exception e)
         {
-            log.info("@@영은 충전 실패함 --> [{}]" , e.toString());
+            log.info("충전 실패함 --> [{}]" , e.toString());
         }
 
         return exgResponse;
