@@ -37,9 +37,6 @@ public class ExgKafkaConsumer {
                                @Header(KafkaHeaders.RECEIVED_TIMESTAMP) long timestamp ,
                                @Header(KafkaHeaders.OFFSET) long offset
     ) {
-
-        MtcResultRequest resultRequest = new MtcResultRequest();
-
         log.info ("kafka 'mtc.ncr.exgRequest' 잡음! --> {}" , exgReqInfo.toString());
 
         //요청받은 통화코드로 조회한 금액 정보
@@ -55,19 +52,9 @@ public class ExgKafkaConsumer {
 
         Double nowJan = nowAcInfo.getAc_jan(); // 현재 환전요청 들어온 통화의 금액
 
-        try {
-            // 공통 정보 셋팅
-            // 현재 금액
-            resultRequest.setNujkJan(nowJan);
-            // 계좌번호(고객번호)
-            resultRequest.setAcno(exgReqInfo.getAcno());
-            // 통화코드
-            resultRequest.setCurC(exgReqInfo.getCurC());
-            // 충전 요청 금액
-            resultRequest.setTrxAmt(exgReqInfo.getTrxAmt());
-            // 거래일자
-            resultRequest.setTrxdt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+        MtcResultRequest resultRequest = new MtcResultRequest(nowJan,exgReqInfo.getAcno(),exgReqInfo.getCurC(),exgReqInfo.getTrxAmt(),LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")),"",-1,"");
 
+        try {
             if("Y".equals(exgReqInfo.getPayYn())) {
                 // 결제 일련번호
                 resultRequest.setAprvSno(exgReqInfo.getPayInfo().getPayAcser());
@@ -102,26 +89,7 @@ public class ExgKafkaConsumer {
 
                     // 결제에서 들어온 경우에는 결제큐와 결과큐에 모두 적재
                     if("Y".equals(exgReqInfo.getPayYn())) {
-                        MtcNcrPayRequest payRequest = new MtcNcrPayRequest();
-
-                        // 계좌번호(고객번호)
-                        payRequest.setAcno(exgReqInfo.getPayInfo().getAcno());
-
-                        // 통화코드
-                        payRequest.setCurC(exgReqInfo.getPayInfo().getCurC());
-
-                        // 거래처
-                        payRequest.setTrxPlace(exgReqInfo.getPayInfo().getTrxPlace());
-
-                        // 거래금액
-                        payRequest.setTrxAmt(exgReqInfo.getPayInfo().getTrxAmt());
-
-                        // 거래일자
-                        payRequest.setTrxDt(exgReqInfo.getPayInfo().getTrxDt());
-
-                        // 결제 일련번호
-                        payRequest.setPayAcser(exgReqInfo.getPayInfo().getPayAcser());
-
+                        MtcNcrPayRequest payRequest = new MtcNcrPayRequest(exgReqInfo.getPayInfo().getAcno(),exgReqInfo.getPayInfo().getCurC(), exgReqInfo.getPayInfo().getTrxPlace(),exgReqInfo.getPayInfo().getTrxAmt(),exgReqInfo.getPayInfo().getTrxDt(),exgReqInfo.getPayInfo().getPayAcser());
                         kafkaTemplate.send("mtc.ncr.payRequest", "NEW", payRequest); // 결제 kew는 "NEW"
                     }
                     kafkaTemplate.send("mtc.ncr.result", "SUCCESS", resultRequest);
