@@ -43,7 +43,7 @@ public class MtcExgController implements MtcExgApi {
             // String exgAcser = exgRequest.getPayAcser();
             String exgAcser = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
 
-            log.info("@@영은 충전 일련번호 : {}", exgAcser);
+            log.info("충전 일련번호 : {}", exgAcser);
 
             // kafka send
             exgRequest.setAcser(exgAcser);
