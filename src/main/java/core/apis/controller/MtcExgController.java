@@ -65,7 +65,7 @@ public class MtcExgController implements MtcExgApi {
                 .get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/log/mkgid")
-                        .queryParam("svcid", "pay")
+                        .queryParam("svcid", "exg")
                         .build()
                 )
                 .retrieve()
