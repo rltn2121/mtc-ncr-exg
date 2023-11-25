@@ -11,6 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 public class MtcExgRequest{
 
+    /*global id*/
+    private String gid;
+
     /* 결제여부             */
     /* Y : 결제 중 충전 요청 */
     /* N : 고객이 충전 요청  */
@@ -30,8 +33,4 @@ public class MtcExgRequest{
 
     /* 결제 정보 */
     private MtcNcrPayRequest payInfo;
-
-    /*global id*/
-    private String gid;
-
 }

@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Random;
 
 /* ----------------------------------------------------- */
 /*  api 호출을 통해 화면단에서 충전 요청이 들어오는 경우          */
@@ -39,13 +40,17 @@ public class MtcExgController implements MtcExgApi {
         log.info("@@@@@ gid: " + gid);
 
         try {
-            // 충전 일련번호 채번 (아마 timestamp 를 붙이지 않을까 싶다)
-            // String exgAcser = exgRequest.getPayAcser();
-            String exgAcser = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            // 충전 일련번호 채번 (랜덤 숫자 2자리 + timestamp 14자리 + 랜덤 숫자 2자리)
+            Random random = new Random();
+            random.setSeed(System.currentTimeMillis());
+            String exgAcser = String.format("%02d", random.nextInt(10000));
+            exgAcser = exgAcser + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            exgAcser = exgAcser + String.format("%02d", random.nextInt(10000));
 
-            log.info("충전 일련번호 : {}", exgAcser);
+            log.info("@@영은충전 일련번호 : {}", exgAcser);
 
             // kafka send
+            exgRequest.setPayYn("N");
             exgRequest.setAcser(exgAcser);
             exgRequest.setGid(gid);
             exgKafkaProducer.produceMessage(exgRequest);

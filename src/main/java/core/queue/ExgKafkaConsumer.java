@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Component
 @RequiredArgsConstructor
@@ -46,6 +47,8 @@ public class ExgKafkaConsumer {
 
         // 충전 요청이 들어오면 환율 계산해서 com 큐에 넣기
         MtcNcrUpdateMainMasRequest comRequest = new MtcNcrUpdateMainMasRequest();
+        comRequest.setGid(exgReqInfo.getGid());
+        comRequest.setSvcId("EXG");
         comRequest.setAcno(exgReqInfo.getAcno());
 
         // 충전요청 들어온 금액은 더하고(sign: 1) 원화는 환율 계산해서 빼주기(sign: -1)
@@ -59,10 +62,22 @@ public class ExgKafkaConsumer {
         }
 
         List<MtcNcrUpdateMainMasRequestSub> reqestList = new ArrayList<>();
+        String acser = "";
+        if ("Y".equals(exgReqInfo.getPayYn())) {
+            // 충전 일련번호 채번 (랜덤 숫자 2자리 + timestamp 14자리 + 랜덤 숫자 2자리)
+            Random random = new Random();
+            random.setSeed(System.currentTimeMillis());
+            acser = String.format("%02d", random.nextInt(10000));
+            acser = acser + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            acser = acser + String.format("%02d", random.nextInt(10000));
+        } else {
+            acser = exgReqInfo.getAcser();
+        }
+
         // 원화 먼저 빼기!
-        reqestList.add(new MtcNcrUpdateMainMasRequestSub(-1, KRWAmt, "KRW", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) , exgReqInfo.getPayInfo().getPayAcser()));
+        reqestList.add(new MtcNcrUpdateMainMasRequestSub(-1, KRWAmt, "KRW", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) , acser));
         // 그다음 외화 충전!
-        reqestList.add(new MtcNcrUpdateMainMasRequestSub(1, exgReqInfo.getTrxAmt(), exgReqInfo.getCurC(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) , exgReqInfo.getPayInfo().getPayAcser()));
+        reqestList.add(new MtcNcrUpdateMainMasRequestSub(1, exgReqInfo.getTrxAmt(), exgReqInfo.getCurC(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) , acser));
         comRequest.setRequestSubList(reqestList);
 
         log.info("@@영은충전 com으로 요청보낼 정보!! --> {}", comRequest.toString());
