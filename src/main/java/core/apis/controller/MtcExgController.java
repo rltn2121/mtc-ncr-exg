@@ -47,6 +47,7 @@ public class MtcExgController implements MtcExgApi {
 
             // kafka send
             exgRequest.setAcser(exgAcser);
+            exgRequest.setGid(gid);
             exgKafkaProducer.produceMessage(exgRequest);
 
             exgResponse.setExgAcser(exgAcser);
