@@ -59,10 +59,16 @@ public class ExgKafkaConsumer {
         }
 
         List<MtcNcrUpdateMainMasRequestSub> reqestList = new ArrayList<>();
+        String acser = "";
+        if ("Y".equals(exgReqInfo.getPayYn())) {
+            acser = exgReqInfo.getPayInfo().getPayAcser();
+        } else {
+            acser = exgReqInfo.getAcser();
+        }
         // 원화 먼저 빼기!
-        reqestList.add(new MtcNcrUpdateMainMasRequestSub(-1, KRWAmt, "KRW", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) , exgReqInfo.getPayInfo().getPayAcser()));
+        reqestList.add(new MtcNcrUpdateMainMasRequestSub(-1, KRWAmt, "KRW", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) , acser));
         // 그다음 외화 충전!
-        reqestList.add(new MtcNcrUpdateMainMasRequestSub(1, exgReqInfo.getTrxAmt(), exgReqInfo.getCurC(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) , exgReqInfo.getPayInfo().getPayAcser()));
+        reqestList.add(new MtcNcrUpdateMainMasRequestSub(1, exgReqInfo.getTrxAmt(), exgReqInfo.getCurC(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) , acser));
         comRequest.setRequestSubList(reqestList);
 
         log.info("@@영은충전 com으로 요청보낼 정보!! --> {}", comRequest.toString());
