@@ -1,14 +1,14 @@
 package core.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Data
 @Getter
 @Setter
 @JsonIgnoreProperties (ignoreUnknown = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class MtcExgRequest{
 
     /* 결제여부             */
