@@ -3,10 +3,7 @@ package core.queue;
 import core.Repository.SdaMainMasRepository;
 import core.domain.SdaMainMas;
 import core.domain.SdaMainMasId;
-import core.dto.MtcExgRequest;
-import core.dto.MtcExgResponse;
-import core.dto.MtcNcrPayRequest;
-import core.dto.MtcResultRequest;
+import core.dto.*;
 import core.service.MtcExgService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,6 +17,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -30,6 +29,11 @@ public class ExgKafkaConsumer {
     private final SdaMainMasRepository sdaMainMasRepository;
     private final MtcExgService exgService;
 
+    // 환율 정보
+    private final static Double USDExg = 1307.5;
+    private final static Double JPYExg = 8.7;
+    private final static Double CNYExg = 180.8;
+
     /* 충전 요청 큐 구독 ing */
     @KafkaListener(topics = "mtc.ncr.exgRequest", groupId = "practice22201653")
     public void consumeMessage(@Payload MtcExgRequest exgReqInfo ,
@@ -38,74 +42,34 @@ public class ExgKafkaConsumer {
                                @Header(KafkaHeaders.RECEIVED_TIMESTAMP) long timestamp ,
                                @Header(KafkaHeaders.OFFSET) long offset
     ) {
-        log.info ("kafka 'mtc.ncr.exgRequest' 잡음! --> {}" , exgReqInfo.toString());
+        log.info ("@@영은충전 kafka 'mtc.ncr.exgRequest' 잡음! --> {}" , exgReqInfo.toString());
 
-        //요청받은 통화코드로 조회한 금액 정보
-        SdaMainMas nowAcInfo = sdaMainMasRepository.
-                                        findById(new SdaMainMasId(exgReqInfo.getAcno() , exgReqInfo.getCurC())).orElseThrow();
+        // 충전 요청이 들어오면 환율 계산해서 com 큐에 넣기
+        MtcNcrUpdateMainMasRequest comRequest = new MtcNcrUpdateMainMasRequest();
+        comRequest.setAcno(exgReqInfo.getAcno());
 
-        log.info("현재 {} 금액 = {}" ,exgReqInfo.getCurC(), nowAcInfo);
-
-        Double nowJan = nowAcInfo.getAc_jan(); // 현재 환전요청 들어온 통화의 금액
-
-        // 결과 큐에 현재 정보 세팅하면서 만들기
-        MtcResultRequest resultRequest = new MtcResultRequest(nowJan,exgReqInfo.getAcno(),exgReqInfo.getCurC(),exgReqInfo.getTrxAmt(),LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")),"",-1,"");
-
-        try {
-            if("Y".equals(exgReqInfo.getPayYn())) {
-                // 결제 일련번호
-                resultRequest.setAprvSno(exgReqInfo.getPayInfo().getPayAcser());
-            } else {
-                // 충전 일련번호
-                resultRequest.setAprvSno(exgReqInfo.getAcser());
-            }
-
-            try {
-                log.info("충전 시도 시작!");
-
-                // 충전 프로세스
-                MtcExgResponse exgResponse = exgService.exchangeService(exgReqInfo);
-
-                if(exgResponse.getResult() == -1) {
-                    // 충전 실패
-                    resultRequest.setUpmuG(4);
-                    resultRequest.setErrMsg(exgResponse.getErrStr());
-
-                    // result 큐로 send
-                    kafkaTemplate.send("mtc.ncr.result", "FAIL", resultRequest);
-                } else {
-                    // 충전 성공
-                    resultRequest.setUpmuG(2);
-
-                    // 결제에서 들어온 경우에는 결제큐와 결과큐에 모두 적재
-                    if("Y".equals(exgReqInfo.getPayYn())) {
-                        MtcNcrPayRequest payRequest = new MtcNcrPayRequest(exgReqInfo.getPayInfo().getAcno(),exgReqInfo.getPayInfo().getCurC(), exgReqInfo.getPayInfo().getTrxPlace(),exgReqInfo.getPayInfo().getTrxAmt(),exgReqInfo.getPayInfo().getTrxDt(),exgReqInfo.getPayInfo().getPayAcser());
-                        kafkaTemplate.send("mtc.ncr.payRequest", "NEW", payRequest); // 결제 kew는 "NEW"
-                    }
-                    kafkaTemplate.send("mtc.ncr.result", "SUCCESS", resultRequest);
-                }
-
-            }
-            catch (Exception e) {
-                log.info("서비스 자체 error");
-
-                // 충전 실패
-                resultRequest.setUpmuG(4);
-                resultRequest.setErrMsg("충전 중 에러가 발생했습니다. 다시 시도하세요.");
-
-                // result 큐로 send
-                kafkaTemplate.send("mtc.ncr.result", "FAIL", resultRequest);
-            }
+        // 충전요청 들어온 금액은 더하고(sign: 1) 원화는 환율 계산해서 빼주기(sign: -1)
+        Double KRWAmt = 0.0;
+        if("USD".equals(exgReqInfo.getCurC())) {
+            KRWAmt = exgReqInfo.getTrxAmt() * USDExg;
+        } else if("JPY".equals(exgReqInfo.getCurC())) {
+            KRWAmt = exgReqInfo.getTrxAmt() * JPYExg;
+        } else if("CNY".equals(exgReqInfo.getCurC())) {
+            KRWAmt = exgReqInfo.getTrxAmt() * CNYExg;
         }
-        catch(Exception e) {
-            log.info("서비스 자체 error");
 
-            // 충전 실패
-            resultRequest.setUpmuG(4);
-            resultRequest.setErrMsg("충전 중 에러가 발생했습니다. 다시 시도하세요.");
+        List<MtcNcrUpdateMainMasRequestSub> reqestList = new ArrayList<>();
+        // 원화 먼저 빼기!
+        reqestList.add(new MtcNcrUpdateMainMasRequestSub(-1, KRWAmt, "KRW", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
+        // 그다음 외화 충전!
+        reqestList.add(new MtcNcrUpdateMainMasRequestSub(1, exgReqInfo.getTrxAmt(), exgReqInfo.getCurC(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
+        comRequest.setRequestSubList(reqestList);
 
-            // result 큐로 send
-            kafkaTemplate.send("mtc.ncr.result", "FAIL", resultRequest);
-        }
+        log.info("@@영은충전 com으로 요청보낼 정보!! --> {}", comRequest.toString());
+
+        // com 큐로 충전 요청 send
+        kafkaTemplate.send("mtc.ncr.comRequest", "KEY", comRequest);
+
+        log.info("@영은충전 충전의 할 일은 여기까지~!");
     }
 }
