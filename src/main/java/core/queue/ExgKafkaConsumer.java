@@ -50,7 +50,6 @@ public class ExgKafkaConsumer {
         comRequest.setGid(exgReqInfo.getGid());
         comRequest.setSvcId("EXG");
         comRequest.setAcno(exgReqInfo.getAcno());
-        comRequest.setPayYn(exgReqInfo.getPayYn());
 
         // 충전요청 들어온 금액은 더하고(sign: 1) 원화는 환율 계산해서 빼주기(sign: -1)
         Double KRWAmt = 0.0;
